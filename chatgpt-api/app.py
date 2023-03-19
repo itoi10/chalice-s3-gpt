@@ -5,8 +5,8 @@ app = Chalice(app_name="chatgpt-api")
 cors_config = CORSConfig(allow_origin="*")
 
 
-@app.route("/longtext", methods=["GET", "POST"], cors=cors_config)
-def longtext():
+@app.route("/lengthy", methods=["GET", "POST"], cors=cors_config)
+def lengthy():
     try:
         request = app.current_request
 
