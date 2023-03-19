@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>長文生成ツール</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+
+function App() {
+  // APIエンドポイント
+  const ENDPOINT = 'http://localhost:8000'   // ローカル環境
+  // const ENDPOINT = '<デプロイしたAPIのURL>' // デプロイ環境
+
+  const [inputText, setInputText] = React.useState('');
+  const [outputText, setOutputText] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
+
+
+  async function submit(e) {
+
+    if (inputText === "") {
+      setOutputText("入力がありません。");
+      return;
+    }
+
+    setIsLoading(true)
+    setOutputText("")
+
+    try {
+      // APIにリクエストを送信
+      const response = await fetch(ENDPOINT + '/longtext', {
+        method:'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({"text": inputText})
+      })
+      const data = await response.json();
+
+      if ('error' in data) {
+        setOutputText("APIからエラーが返されました。" + data.error);
+        return;
+      }
+
+      // レスポンスをアウトプットに表示
+      setOutputText(data.result);
+
+    } catch (error) {
+      setOutputText("エラーが発生しました。\n" + error);
+    }
+    setIsLoading(false)
+  }
+
+  function clear(e) {
+    setInputText("")
+    setOutputText("")
+  }
+
+  function handleInputChange(e) {
+    setInputText(e.target.value)
+  }
+
+  function handleOutputChange(e) {
+    setOutputText(e.target.value)
+  }
+
+  return (
+    <section className="section">
+      <div className="container">
+
+        <div className="columns is-centered">
+          <div className="column is-half-desktop">
+            <div className="field">
+              <h1 className="title">長文生成ツール</h1>
+            </div>
+            <div className="field">
+                <input className="input" type="text" value={inputText} onChange={handleInputChange} placeholder="猫が好き"/>
+            </div>
+            <div className="field is-grouped">
+              <div className="control">
+                <button className={isLoading ? "button is-info is-loading" : "button is-info"} onClick={submit}>無駄に長くする↓</button>
+              </div>
+              <div className="control">
+                <button className="button is-light" onClick={clear}>クリア</button>
+              </div>
+            </div>
+            <div className="field">
+                <textarea className="textarea" rows={16} value={outputText} onChange={handleOutputChange}></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  ReactDOM.render(<App />,document.getElementById('root'));
+  </script>
+</body>
+</html>
