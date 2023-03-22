@@ -5,23 +5,20 @@ app = Chalice(app_name="chatgpt-api")
 cors_config = CORSConfig(allow_origin="*")
 
 
-@app.route("/lengthy", methods=["GET", "POST"], cors=cors_config)
+@app.route("/lengthy", methods=["POST"], cors=cors_config)
 def lengthy():
     try:
-        request = app.current_request
-
-        if request.method == "GET":
-            text = request.query_params["text"]
-
-        elif request.method == "POST":
-            text = request.json_body["text"]
+        # リクエストからテキストを取得
+        text = app.current_request.json_body.get("text")
+        if not text:
+            raise Exception("textがありません")
 
         messages = [
             {"role": "system", "content": "あなたは長文生成ツールです。「」の中のテキストを無駄に長い文章に変換してください。"},
             {"role": "user", "content": f"「{text}」"},
         ]
 
-        # ChatGPTに送信
+        # ChatGPTのAPIに送信
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # https://platform.openai.com/docs/models/gpt-3-5
             messages=messages,

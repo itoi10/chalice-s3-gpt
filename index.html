@@ -11,92 +11,64 @@
 <body>
   <div id="root"></div>
   <script type="text/babel">
-
-  function App() {
-    // APIのURLを指定
-    const CHALICE_API_URL = 'http://localhost:8000'   // ローカル環境
-    // const CHALICE_API_URL = '<デプロイしたAPIのURL>' // デプロイ環境
-
-    const [inputText, setInputText] = React.useState('');
-    const [outputText, setOutputText] = React.useState('');
-    const [isLoading, setIsLoading] = React.useState(false);
-
-
-    async function submit(e) {
-      if (inputText === "") {
-        setOutputText("入力がありません。");
-        return;
-      }
-
-      setIsLoading(true)
-      setOutputText("")
-
-      try {
-        // APIにリクエストを送信
-        const response = await fetch(CHALICE_API_URL + '/lengthy', {
-          method:'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({"text": inputText})
-        })
-        const data = await response.json();
-
-        if ('error' in data) {
-          setOutputText("APIからエラーが返されました。" + data.error);
+    function App() {
+      // APIのURLを指定
+      const CHALICE_API_URL = 'http://localhost:8000'; // ローカル環境の場合
+      // useStateを使って値を管理
+      const [inputText, setInputText] = React.useState('');
+      const [outputText, setOutputText] = React.useState('');
+      const [isLoading, setIsLoading] = React.useState(false);
+      // 実行ボタンが押されたときの処理
+      async function submit(e) {
+        // 入力が空の場合はエラーメッセージを表示
+        if (inputText === "") {
+          setOutputText("入力がありません。");
           return;
         }
-
-        // レスポンスをアウトプットに表示
-        setOutputText(data.result);
-
-      } catch (error) {
-        setOutputText("エラーが発生しました。\n" + error);
+        // ローディングを開始
+        setIsLoading(true);
+        try {
+          // APIにリクエストを送信
+          const response = await fetch(CHALICE_API_URL + '/lengthy', {
+            method:'POST',
+            body: JSON.stringify({"text": inputText})
+          });
+          const data = await response.json();
+          // エラーが返された場合はエラーメッセージを表示
+          if ('error' in data) {
+            setOutputText("APIからエラーが返されました。\n" + data.error);
+            return;
+          }
+          // 結果を表示
+          setOutputText(data.result);
+        } catch (error) {
+          // エラーが発生した場合はエラーメッセージを表示
+          setOutputText("エラーが発生しました。\n" + error);
+        } finally {
+          // ローディングを終了
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false)
-    }
-
-    function clear(e) {
-      setInputText("")
-      setOutputText("")
-    }
-
-    function handleInputChange(e) {
-      setInputText(e.target.value)
-    }
-
-    function handleOutputChange(e) {
-      setOutputText(e.target.value)
-    }
-
-    return (
-      <section className="section">
-        <div className="container">
-          <div className="columns is-centered">
-            <div className="column is-half-desktop">
-              <div className="field">
-                <h1 className="title">長文生成ツール</h1>
-              </div>
-              <div className="field">
-                  <input className="input" type="text" value={inputText} onChange={handleInputChange} placeholder="猫が好き"/>
-              </div>
-              <div className="field is-grouped">
-                <div className="control">
-                  <button className={isLoading ? "button is-info is-loading" : "button is-info"} onClick={submit}>無駄に長くする↓</button>
-                </div>
-                <div className="control">
-                  <button className="button is-light" onClick={clear}>クリア</button>
-                </div>
-              </div>
-              <div className="field">
-                <textarea className="textarea" rows={16} value={outputText} onChange={handleOutputChange}></textarea>
-              </div>
-            </div>
+      // クリアボタンが押されたときの処理
+      function clear(e) {
+        setInputText("");
+        setOutputText("");
+      }
+      // JSXを返す
+      return (
+        <div className="section container">
+          <h1 className="title">長文生成ツール</h1>
+          <input className="input mb-3" type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="ここに入力"/>
+          <div className="is-grouped mb-3">
+            <button className={isLoading ? "button is-info is-loading" : "button is-info"} onClick={submit}>無駄に長くする↓</button>
+            <button className="button is-light ml-3" onClick={clear}>クリア</button>
           </div>
+          <textarea className="textarea" rows={16} value={outputText} onChange={(e) => setOutputText(e.target.value)} />
         </div>
-      </section>
-    );
-  }
-
-  ReactDOM.render(<App />,document.getElementById('root'));
+      );
+    }
+    // Appコンポーネントを描画
+    ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
 </html>
